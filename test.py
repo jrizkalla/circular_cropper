@@ -1,22 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from cropper import *
 from PIL import Image, ImageTk
 from random import randint
 
-class ImageDisplayer:
-    def __init__(self, root, img):
-        frame = ttk.Frame(root)
-#?        frame.grid(column=0, row=0, stick=(tk.N, tk.W, tk.E, tk.S))
-        frame.pack()
-        self.image = img
-        
-        label = ttk.Label(frame, image=img)
-        label.pack()
-        
-        print(f"Frame: {str(frame)}")
-        print(f"Label: {str(label)}")
-    
 root = tk.Tk()
         
 #?image = Image.open("img.jpg").convert()
