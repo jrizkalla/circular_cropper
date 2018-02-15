@@ -91,7 +91,6 @@ id = ImageDisplayer(frame, image=Image.open("img.jpg"),
         width=100,
         height=100)
 id.grid(row=0, column=0, sticky="nsew", columnspan=2)
-id.focus()
 
 vscroll = tk.Scrollbar(frame, orient=tk.VERTICAL, command=id.yview)
 hscroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=id.xview)
@@ -104,8 +103,15 @@ scale_down_button = ttk.Button(frame, text="-", command=lambda: id.scale_down())
 scale_up_button = ttk.Button(frame, text="+", command=lambda: id.scale_up())
 scale_down_button.grid(row=2, column=0, sticky="ew")
 scale_up_button.grid(row=2, column=1, sticky="ew")
+gen_img_button = ttk.Button(frame, text="crop", command=lambda: id.generate_image().show())
+gen_img_button.grid(row=3, column=0, sticky="ew", columnspan=2)
 
 
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
-root.mainloop()
+# Bug fix for UnicodeDecodeError
+while True:
+    try:
+        root.mainloop()
+        break
+    except UnicodeDecodeError: pass
