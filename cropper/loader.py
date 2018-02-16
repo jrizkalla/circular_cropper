@@ -72,7 +72,7 @@ class ImageTable(ttk.Frame):
         
         
         # placeholders for the inputs
-        url_box.insert(0, "URL")
+        url_box.insert(0, "URL or file path")
         id_box.insert(0, "output filename")
         def _remove_placeholder(box, *args, **kwargs):
             box.delete(0, "end")
@@ -83,19 +83,24 @@ class ImageTable(ttk.Frame):
         
         
     def _on_crop(self, idx):
-        url = urlparse(self.entry_frames[idx].children["url_field"].get())
+        url_or_filename = self.entry_frames[idx].children["url_field"].get().strip()
         id_ = self.entry_frames[idx].children["id_field"].get().strip()
-        if url.scheme == "":
-            url = url._replace(scheme="http")
         ld = LoadingDialog(self)
         
         def _get_response():
             try:
-                response = http.get(urlunparse(url))
-                response.raise_for_status()
-                
-                # is the reponse an image
-                img = Image.open(io.BytesIO(response.content))
+                if path.isfile(url_or_filename):
+                    img = Image.open(url_or_filename)
+                else:
+                    url = urlparse(url_or_filename)
+                    if url.scheme == "":
+                        url = url._replace(scheme="http")
+                    response = http.get(urlunparse(url))
+                    response.raise_for_status()
+                    
+                    # is the reponse an image
+                    img = Image.open(io.BytesIO(response.content))
+                    
                 img.show()
                 
                 ld.destroy()
