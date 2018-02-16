@@ -107,6 +107,9 @@ gen_img_button = ttk.Button(frame, text="crop", command=lambda: id.generate_imag
 gen_img_button.grid(row=3, column=0, sticky="ew", columnspan=2)
 
 
+loader = ImageLoader(root)
+loader.grid(row=0, column=0, sticky="NSEW")
+
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 # Bug fix for UnicodeDecodeError
