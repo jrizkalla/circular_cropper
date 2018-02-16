@@ -13,11 +13,6 @@ import requests as http
 from urllib.parse import urlparse, urlunparse
 
 class LoadingDialog(tk.Toplevel):
-    """
-    A dialog that displays a progress bar and, if an error occurs, an error message.
-    Use `report_error` to hide the progress bar and display a text error.
-    """
-    
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.transient(parent)
@@ -36,11 +31,6 @@ class LoadingDialog(tk.Toplevel):
         
         
     def report_error(self, desc=""):
-        """
-        Remove the progress bar and report an error.
-        :param desc: the error to report
-        """
-        
         self.prog_bar.destroy()
         del self.prog_bar
         
@@ -50,29 +40,16 @@ class LoadingDialog(tk.Toplevel):
         self.error_label.grid(row=1, column=0, sticky="nsew")
         print("Reporting error")
         
-        
-        
-        
 
-class ImageTable(tk.Canvas):
-    """
-    A table of URLs mapped to IDs.
-    """
-    
+class ImageTable(ttk.Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.bind("<Configure>", self._on_configure)
         self.columnconfigure(0, weight=1)
         self.entry_frames = []
         
-    def _on_configure(self, *args):
-        self["scrollregion"] = (0, 0, self.winfo_reqwidth(), self.winfo_reqheight())
         
     def add_entry(self, url=None, id_=None):
-        """
-        Add a new entry to the table.
-        """
         url = url if url is not None else ""
         id_ = id_ if id_ is not None else ""
         
@@ -93,11 +70,9 @@ class ImageTable(tk.Canvas):
         entry.grid(row=len(self.entry_frames)-1, column=0,
                 sticky="nsew")
         
-        # also update the scrollregion to make it bigger
-        self._on_configure()
         
         # placeholders for the inputs
-        url_box.insert(0, "File path or URL")
+        url_box.insert(0, "URL")
         id_box.insert(0, "output filename")
         def _remove_placeholder(box, *args, **kwargs):
             box.delete(0, "end")
@@ -108,24 +83,19 @@ class ImageTable(tk.Canvas):
         
         
     def _on_crop(self, idx):
-        url_or_filename = self.entry_frames[idx].children["url_field"].get()
+        url = urlparse(self.entry_frames[idx].children["url_field"].get())
         id_ = self.entry_frames[idx].children["id_field"].get().strip()
+        if url.scheme == "":
+            url = url._replace(scheme="http")
         ld = LoadingDialog(self)
         
         def _get_response():
             try:
-                # is it a filename
-                if path.isfile(url_of_filename):
-                    img = Image.open(url_or_filename)
-                else:
-                    if url.scheme == "":
-                        url = url._replace(scheme="http")
-                    response = http.get(urlunparse(url))
-                    response.raise_for_status()
-                    
-                    # is the reponse an image
-                    img = Image.open(io.BytesIO(response.content))
-                    
+                response = http.get(urlunparse(url))
+                response.raise_for_status()
+                
+                # is the reponse an image
+                img = Image.open(io.BytesIO(response.content))
                 img.show()
                 
                 ld.destroy()
@@ -142,15 +112,13 @@ class ImageTable(tk.Canvas):
             self.after(100, _get_response)
         
         
-    def yview(self, *args):
-        print("yview")
-        super().yview(*args)
         
 
 class ImageLoader(ttk.Frame):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
         
         dir_var = tk.StringVar()
         
@@ -162,9 +130,6 @@ class ImageLoader(ttk.Frame):
         sources_label = ttk.Label(self, text="Image Sources")
         
         mapping = ImageTable(self)
-        mapping_scroll = ttk.Scrollbar(self, orient="vertical",
-                command=mapping.yview)
-        mapping["yscrollcommand"] = mapping_scroll.set
         
         out_dir_label = ttk.Label(self, text="Output directory: ")
         out_dir_input = ttk.Entry(self, 
@@ -190,13 +155,12 @@ class ImageLoader(ttk.Frame):
 #?        help_button.grid(row=0, column=2, sticky="nsew")
         
         mapping.grid(row=1, column=0, columnspan=2, rowspan=3, sticky="nesw")
-        mapping_scroll.grid(row=1, column=2, rowspan=3, sticky="ns")
-        add_button.grid(row=1, column=3, sticky="n")
+        add_button.grid(row=1, column=2, sticky="n")
         add_button.focus_set()
         
         out_dir_label.grid(row=4, column=0, sticky="e", pady=10)
         out_dir_input.grid(row=4, column=1, sticky="ew")
-        choose_button.grid(row=4, column=3, sticky="w")
+        choose_button.grid(row=4, column=2, sticky="w")
         
         self.dir_var = dir_var
         self.text_entry_style = text_entry_style
