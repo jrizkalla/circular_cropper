@@ -87,28 +87,34 @@ class ScrolledEnglishDict:
 
 #?sc = ScrolledImage(frame)
 #ScrolledEnglishDict(root)
-id = ImageDisplayer(frame, image=Image.open("img.jpg"),
-        width=100,
-        height=100)
-id.grid(row=0, column=0, sticky="nsew", columnspan=2)
+#id = ImageDisplayer(frame, image=Image.open("img.jpg"),
+#        width=100,
+#        height=100)
+#id.grid(row=0, column=0, sticky="nsew", columnspan=2)
+#
+#vscroll = tk.Scrollbar(frame, orient=tk.VERTICAL, command=id.yview)
+#hscroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=id.xview)
+#vscroll.grid(row=0, column=2, sticky="ns")
+#hscroll.grid(row=1, column=0, sticky="ew", columnspan=2)
+#id["yscrollcommand"] = vscroll.set
+#id["xscrollcommand"] = hscroll.set
+#
+#scale_down_button = ttk.Button(frame, text="-", command=lambda: id.scale_down())
+#scale_up_button = ttk.Button(frame, text="+", command=lambda: id.scale_up())
+#scale_down_button.grid(row=2, column=0, sticky="ew")
+#scale_up_button.grid(row=2, column=1, sticky="ew")
+#gen_img_button = ttk.Button(frame, text="crop", command=lambda: id.generate_image().show())
+#gen_img_button.grid(row=3, column=0, sticky="ew", columnspan=2)
 
-vscroll = tk.Scrollbar(frame, orient=tk.VERTICAL, command=id.yview)
-hscroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=id.xview)
-vscroll.grid(row=0, column=2, sticky="ns")
-hscroll.grid(row=1, column=0, sticky="ew", columnspan=2)
-id["yscrollcommand"] = vscroll.set
-id["xscrollcommand"] = hscroll.set
 
-scale_down_button = ttk.Button(frame, text="-", command=lambda: id.scale_down())
-scale_up_button = ttk.Button(frame, text="+", command=lambda: id.scale_up())
-scale_down_button.grid(row=2, column=0, sticky="ew")
-scale_up_button.grid(row=2, column=1, sticky="ew")
-gen_img_button = ttk.Button(frame, text="crop", command=lambda: id.generate_image().show())
-gen_img_button.grid(row=3, column=0, sticky="ew", columnspan=2)
+#?loader = ImageLoader(root)
+#?loader.grid(row=0, column=0, sticky="NSEW")
+img = Image.open("img.jpg")
+disp = ImageDisplayerWrapper(root, image=img,
+        out_file="/Users/johnrizkalla/Documents/image_extractor/test.png",
+        command=lambda: disp.destroy())
+disp.grid(row=0, column=0, sticky="nsew", columnspan=2)
 
-
-loader = ImageLoader(root)
-loader.grid(row=0, column=0, sticky="NSEW")
 
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)

@@ -4,6 +4,73 @@ from tkinter import ttk
 from PIL import Image, ImageTk, ImageDraw
 import math
 
+class ImageDisplayerWrapper(ttk.Frame):
+    """
+    Provides a wrapper around `ImageDisplayer` for zooming, scrolling, and cropping.
+    """
+    
+    def __init__(self, parent, *args, **kwargs):
+        
+        try:
+            image = kwargs["image"]
+            self.out_file = kwargs["out_file"]
+            del kwargs["image"]
+            del kwargs["out_file"]
+        except KeyError as e:
+            raise TypeError(f"missing {e.args[0]} keyword argument") from None
+        
+        try:
+            self.out_format = kwargs["out_format"]
+            del kwargs["out_format"]
+        except KeyError:
+            self.out_format = "png"
+        try:
+            self._crop_command = kwargs["command"]
+            del kwargs["command"]
+        except KeyError:
+            self._crop_command = lambda self: ...
+        
+        super().__init__(parent, *args, **kwargs)
+        
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=0)
+        
+        displayer = ImageDisplayer(self, image=image, width=100, height=100)
+        displayer.grid(row=0, column=0, sticky="nsew", columnspan=2)
+        
+        vscroll = ttk.Scrollbar(self,
+                orient="vertical", 
+                command=displayer.yview)
+        hscroll = ttk.Scrollbar(self,
+                orient="horizontal", 
+                command=displayer.xview)
+        vscroll.grid(row=0, column=2, sticky="ns")
+        hscroll.grid(row=1, column=0, sticky="ew", columnspan=2)
+        displayer["yscrollcommand"] = vscroll.set
+        displayer["xscrollcommand"] = hscroll.set
+        
+        scale_down_button = ttk.Button(self, text="-",
+                command=lambda: displayer.scale_down())
+        scale_up_button = ttk.Button(self, text="+",
+                command=lambda: displayer.scale_up())
+        scale_down_button.grid(row=2, column=0, sticky="ew")
+        scale_up_button.grid(row=2, column=1, sticky="ew")
+        gen_img_button = ttk.Button(self, text="crop",
+                command=self._on_crop)
+        gen_img_button.grid(row=3, column=0, sticky="ew", columnspan=2)
+        
+        self.displayer = displayer
+        
+    def _on_crop(self, *args):
+        # crop the image and save it
+        image = self.displayer.generate_image()
+        image.save(self.out_file, format=self.out_format)
+        self._crop_command()
+        
+    
+
 class ImageDisplayer(tk.Canvas):
     """
     Displays an image.
@@ -24,6 +91,7 @@ class ImageDisplayer(tk.Canvas):
         - `bindmousewheel`: if False, don't bind `<MouseWheel>` to resizing the image (defaults to `True`)
         - `bindmousedrag`: if False, don't scroll with mouse motion (defaults to `True`)
         - `overlaycircle`: if False, don't draw an overlay circle (defaults to `True`)
+        - `extend_image`: if False, don't draw extra white space around the image (defaults to `True`)
         
         """
         
@@ -32,13 +100,20 @@ class ImageDisplayer(tk.Canvas):
             del kwargs["image"]
         except KeyError:
             img = Image.new("RGBA", 500, 500, fill=(255, 255, 255))
+        try:
+            extend_image = kwargs["extend_image"]
+            del kwargs["extend_image"]
+        except KeyError: extend_image = True
         
         # pad the image with whitespace on 4 sides
-        self.img = Image.new("RGBA", (img.width * 2, img.height * 2), "white")
-        self.img.paste(img, box=(img.width//2, img.height//2))
+        if extend_image:
+            self.img = Image.new("RGBA", (img.width * 2, img.height * 2), "white")
+            self.img.paste(img, box=(img.width//2, img.height//2))
+        else:
+            self.img = img
         
         self.orig_img = self.img # retains it's original size
-        kwargs["scrollregion"] = (0, 0, img.width, img.height)
+        kwargs["scrollregion"] = (0, 0, self.img.width, self.img.height)
         
         try:
             bind_mousewheel = kwargs["bind_mousewheel"]
@@ -66,7 +141,7 @@ class ImageDisplayer(tk.Canvas):
             self._draw_overlay_circle = lambda: ...
         
         self._draw_overlay_circle()
-        self.tk_image = ImageTk.PhotoImage(self.img.convert("RGBA"))
+        self.tk_image = ImageTk.PhotoImage(self.img)
         self.create_image(0, 0, anchor="nw", image=self.tk_image)
         
         self.bind("<Configure>", self._on_resize)
