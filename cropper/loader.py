@@ -42,8 +42,11 @@ class LoadingDialog(tk.Toplevel):
         
 
 class ImageTable(ttk.Frame):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent, command, out_dir_var, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        
+        self.command = command
+        self.out_dir_var = out_dir_var
         
         self.columnconfigure(0, weight=1)
         self.entry_frames = []
@@ -106,7 +109,8 @@ class ImageTable(ttk.Frame):
                     # is the reponse an image
                     img = Image.open(io.BytesIO(response.content))
                     
-                img.show()
+                cmd = self.command
+                cmd(img, path.join(self.out_dir_var.get(), id_))
                 
                 ld.destroy()
                 if not self._is_entry_destroyed(entry):
@@ -146,8 +150,14 @@ class ImageTable(ttk.Frame):
 class ImageLoader(ttk.Frame):
     
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         
+        try:
+            command = kwargs["command"]
+            del kwargs["command"]
+        except KeyError:
+            command = lambda img: ...
+            
+        super().__init__(*args, **kwargs)
         
         dir_var = tk.StringVar()
         
@@ -158,7 +168,7 @@ class ImageLoader(ttk.Frame):
         
         sources_label = ttk.Label(self, text="Image Sources")
         
-        mapping = ImageTable(self)
+        mapping = ImageTable(self, command, dir_var)
         
         out_dir_label = ttk.Label(self, text="Output directory: ")
         out_dir_input = ttk.Entry(self, 

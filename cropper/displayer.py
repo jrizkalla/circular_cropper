@@ -66,7 +66,7 @@ class ImageDisplayerWrapper(ttk.Frame):
     def _on_crop(self, *args):
         # crop the image and save it
         image = self.displayer.generate_image()
-        image.save(self.out_file, format=self.out_format)
+        image.save(f"{self.out_file}.{self.out_format}", format=self.out_format)
         self._crop_command()
         
     
