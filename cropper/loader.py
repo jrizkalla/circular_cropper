@@ -58,12 +58,15 @@ class ImageTable(ttk.Frame):
         id_box = ttk.Entry(entry, name="id_field")
         arrow_label = ttk.Label(entry, text="\u2192")
         crop_button = ttk.Button(entry, name="crop_button", text="     crop     ",
-                command=partial(self._on_crop, len(self.entry_frames)))
+                command=partial(self._on_crop, entry))
+        del_button = ttk.Button(entry, text="\u2716",
+                width=1, command=partial(self._on_del, entry))
         
         url_box.grid(row=0, column=0, sticky="nswe")
         id_box.grid(row=0, column=2, sticky="nswe")
         arrow_label.grid(row=0, column=1, sticky="nsew")
         crop_button.grid(row=0, column=3)
+        del_button.grid(row=0, column=4)
         
         self.entry_frames.append(entry)
         entry.columnconfigure(0, weight=1)
@@ -82,9 +85,11 @@ class ImageTable(ttk.Frame):
     
         
         
-    def _on_crop(self, idx):
-        url_or_filename = self.entry_frames[idx].children["url_field"].get().strip()
-        id_ = self.entry_frames[idx].children["id_field"].get().strip()
+    def _on_crop(self, entry):
+        if self._is_entry_destroyed(entry): return
+        
+        url_or_filename = entry.children["url_field"].get().strip()
+        id_ = entry.children["id_field"].get().strip()
         ld = LoadingDialog(self)
         
         def _get_response():
@@ -104,7 +109,8 @@ class ImageTable(ttk.Frame):
                 img.show()
                 
                 ld.destroy()
-                self.entry_frames[idx].children["crop_button"].configure(text="crop again")
+                if not self._is_entry_destroyed(entry):
+                    entry.children["crop_button"].configure(text="crop again")
             except http.ConnectionError:
                 ld.report_error("Unable to connect. Please check the URL and your internet connection")
             except Exception as e:
@@ -115,7 +121,25 @@ class ImageTable(ttk.Frame):
             ld.report_error("ID is empty")
         else:
             self.after(100, _get_response)
+            
+    def _is_entry_destroyed(self, entry):
+        try:
+            self.entry_frames.index(entry)
+        except ValueError: return True
+        else: return False
         
+    def _on_del(self, entry):
+        try:
+            idx = self.entry_frames.index(entry)
+        except ValueError: # not in the array
+            return
+        
+        entry = self.entry_frames[idx]
+        del self.entry_frames[idx]
+        entry.destroy()
+        
+        for i, entry in enumerate(self.entry_frames[idx:]):
+            entry.grid(row=i+idx, column=0, sticky="nsew")
         
         
 
